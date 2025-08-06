@@ -1,0 +1,37 @@
+defaults:
+  timeout: "30s"
+  retry: "3"
+  ports:
+    consul: 8600
+    redis: 6380
+
+environments:
+  staging:
+    vars:
+      consul_endpoint: "consul.stg.internal:8500"
+      redis_endpoint: "redis.stg.internal:6379"
+      log_level: "debug"
+    
+    gost_command: |
+      -L=http://127.0.0.1:{{.ports.consul}}
+      -F=http://{{.consul_endpoint}}
+      -L=tcp://127.0.0.1:{{.ports.redis}}
+      -F=tcp://{{.redis_endpoint}}
+      --timeout={{.timeout}}
+      --retry={{.retry}}
+      --log-level={{.log_level}}
+
+  production:
+    vars:
+      consul_endpoint: "consul.prod.internal:8500"
+      redis_endpoint: "redis.prod.internal:6379"
+      log_level: "error"
+    
+    gost_command: |
+      -L=https://${CONSUL_USER}:${CONSUL_PASS}@127.0.0.1:{{.ports.consul}}
+      -F=https://{{.consul_endpoint}}
+      -L=tcp://127.0.0.1:{{.ports.redis}}
+      -F=tcp://{{.redis_endpoint}}
+      --timeout={{.timeout}}
+      --retry={{.retry}}
+      --log-level={{.log_level}}
