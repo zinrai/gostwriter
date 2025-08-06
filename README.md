@@ -82,7 +82,6 @@ For detailed command line options for gost, refer to [gost](https://github.com/g
 
 Templates can access variables from both `defaults` and environment-specific `vars`:
 
-- `{{.timeout}}`, `{{.retry}}` - From defaults
 - `{{.ports.consul}}`, `{{.ports.redis}}` - Nested values from defaults
 - `{{.consul_endpoint}}`, `{{.log_level}}` - From environment vars
 - `${CONSUL_USER}`, `${REDIS_PASS}` - Environment variables (expanded at runtime)

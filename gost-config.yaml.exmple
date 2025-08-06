@@ -1,37 +1,75 @@
-defaults:
-  timeout: "30s"
-  retry: "3"
-  ports:
-    consul: 8600
-    redis: 6380
-
 environments:
+  # Simple direct forwarding
+  direct:
+    vars:
+      consul_local: "127.0.0.1:8500"
+      consul_remote: "192.0.2.10:8500"
+      redis_local: "127.0.0.1:6379"
+      redis_remote: "192.0.2.11:6379"
+    
+    gost_command: |
+      -L={{.consul_local}}/{{.consul_remote}}
+      -L={{.redis_local}}/{{.redis_remote}}
+
+  # Staging environment
   staging:
     vars:
-      consul_endpoint: "consul.stg.internal:8500"
-      redis_endpoint: "redis.stg.internal:6379"
-      log_level: "debug"
+      consul_listen: "127.0.0.1:8500"
+      consul_target: "198.51.100.10:8500"
+      redis_listen: "127.0.0.1:6380"
+      redis_target: "198.51.100.11:6379"
     
     gost_command: |
-      -L=http://127.0.0.1:{{.ports.consul}}
-      -F=http://{{.consul_endpoint}}
-      -L=tcp://127.0.0.1:{{.ports.redis}}
-      -F=tcp://{{.redis_endpoint}}
-      --timeout={{.timeout}}
-      --retry={{.retry}}
-      --log-level={{.log_level}}
+      -L={{.consul_listen}}/{{.consul_target}}
+      -L={{.redis_listen}}/{{.redis_target}}
+      -D
 
+  # Production environment with separated IP and port
   production:
     vars:
-      consul_endpoint: "consul.prod.internal:8500"
-      redis_endpoint: "redis.prod.internal:6379"
-      log_level: "error"
+      consul_local_ip: "127.0.0.1"
+      consul_local_port: "8500"
+      consul_remote_ip: "203.0.113.10"
+      consul_remote_port: "8500"
+      redis_local_ip: "127.0.0.1"
+      redis_local_port: "6380"
+      redis_remote_ip: "203.0.113.11"
+      redis_remote_port: "6379"
     
     gost_command: |
-      -L=https://${CONSUL_USER}:${CONSUL_PASS}@127.0.0.1:{{.ports.consul}}
-      -F=https://{{.consul_endpoint}}
-      -L=tcp://127.0.0.1:{{.ports.redis}}
-      -F=tcp://{{.redis_endpoint}}
-      --timeout={{.timeout}}
-      --retry={{.retry}}
-      --log-level={{.log_level}}
+      -L={{.consul_local_ip}}:{{.consul_local_port}}/{{.consul_remote_ip}}:{{.consul_remote_port}}
+      -L={{.redis_local_ip}}:{{.redis_local_port}}/{{.redis_remote_ip}}:{{.redis_remote_port}}
+
+  # TCP protocol explicit version
+  tcp-forward:
+    vars:
+      consul: "tcp://127.0.0.1:8500/192.0.2.10:8500"
+      redis: "tcp://127.0.0.1:6380/192.0.2.11:6379"
+    
+    gost_command: |
+      -L={{.consul}}
+      -L={{.redis}}
+
+  # HTTP proxy mode (using -F for forwarding)
+  http-proxy:
+    vars:
+      consul_proxy: "127.0.0.1:8500"
+      consul_backend: "consul.internal:8500"
+      redis_proxy: "127.0.0.1:6380"
+      redis_backend: "redis.internal:6379"
+    
+    gost_command: |
+      -L=http://{{.consul_proxy}} -F=http://{{.consul_backend}}
+      -L=tcp://{{.redis_proxy}} -F=tcp://{{.redis_backend}}
+
+  # IPv6 example (using RFC 3849 documentation prefix)
+  ipv6:
+    vars:
+      consul_local: "[::1]:8500"
+      consul_remote: "[2001:db8::10]:8500"
+      redis_local: "[::1]:6380"
+      redis_remote: "[2001:db8::11]:6379"
+    
+    gost_command: |
+      -L={{.consul_local}}/{{.consul_remote}}
+      -L={{.redis_local}}/{{.redis_remote}}
