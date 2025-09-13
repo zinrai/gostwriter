@@ -88,4 +88,4 @@ Templates can access variables from both `defaults` and environment-specific `va
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](https://opensource.org/license/mit) for details.
+This project is licensed under the [MIT License](./LICENSE).
